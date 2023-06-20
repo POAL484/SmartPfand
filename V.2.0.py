@@ -1,18 +1,18 @@
-import pygame as pg
-import serial
-import threading as th
-import sys
+import pygame as pg #Основная графическая библиотека
+import serial #Библиотека для работы с монитором порта
+import threading as th #Библиотека для много-поточности
+import sys #Библиотека для системных шрифтов
 #import json
-import ast
-from time import sleep
-import cv2 as cv
-import numpy as np
-from keras.models import load_model
-import math
-import codecs as cdcs #импорт библиотек
+import ast #Библиотека для работы с json файлами
+from time import sleep #Библиотека для задержек
+import cv2 as cv #Библиотека для работы с фотографиями
+import numpy as np #Библиотека для работы с массивами
+from keras.models import load_model #Функция для загрузки модели из файла
+import math #Библиотека для математический функций
+import codecs as cdcs #Библиотека для правильной работы utf-8 файлов
 
-class Button():
-    def __init__(self, x, y, width, height, buttonText='Button', onclickFunction=None, onePress=False, hWWW = 1.1, **kwargs):
+class Button(): #Класс кнопки
+    def __init__(self, x, y, width, height, buttonText='Button', onclickFunction=None, onePress=False, hWWW = 1.1, **kwargs): #Инициализация
         self.x = x
         self.y = y
         self.width = width
@@ -21,7 +21,7 @@ class Button():
         self.onePress = onePress
         self.hWWW = hWWW
         try: self.textSize = kwargs['textSize']
-        except KeyError: self.textSize = 25
+        except KeyError: self.textSize = 35
         pg.alreadyPressed = False
 
         self.fillColors = {
@@ -40,7 +40,7 @@ class Button():
 
         obj.append(self)
 
-    def process(self):
+    def process(self): #Функция рендера кнопки, используется каждый кадр
         if self.st:
             mousePos = pg.mouse.get_pos()
             self.buttonSurface.fill(self.fillColors['normal'])
@@ -62,10 +62,10 @@ class Button():
             ])
             root.blit(self.buttonSurface, self.buttonRect)
 
-    def hide(self): self.st = False
-    def show(self):self.st = True
+    def hide(self): self.st = False #Выключает рендер кнопки
+    def show(self):self.st = True #Включает рендер кнопки
 
-class Keyboard123():
+class Keyboard123(): #Класс для клавиатуры из кнопок
     def __init__(self):
         self.obj = []
         self.Y1 = Button(110, pg.hs/2+100-150, 95, 95, "Й", hWWW = 2, onclickFunction=lambda lt = "й": self.add(lt))
@@ -137,50 +137,50 @@ class Keyboard123():
         self.backspace = Button(1200, pg.hs/2-200, 300, 95, 'Стереть', hWWW = 2, onclickFunction=self.back)
         self.obj.append(self.backspace)
         self.text = ''
-    def show(self):
+    def show(self): #Включает рендер всех "клавиш" клавиатуры
         for i in self.obj:
-            i.show()
-    def hide(self):
+            i.show() 
+    def hide(self): #Выключает рендер всех "клавиш" клавиатуры
         for i in self.obj:
             i.hide()
-    def add(self, lt):
+    def add(self, lt): #Функция которая срабатывает при нажатии на клавишу
         self.text += lt
-    def showText(self):
+    def showText(self): #Рендер текста
         addText(pg.font.SysFont('Arial', 40, True), self.text, (0, 0, 0), pg.ws/2, pg.hs/2-300)
-    def back(self):
+    def back(self): #Функция стирания текста
         try: self.text = self.text[0:len(self.text)-1]
         except IndexError: pass
             
 
-def hideAll():
+def hideAll(): #Вспомогательная функция скрытия всех кнопок
     for i in obj:
         i.hide()
 
-def addText(sfont, text, color, x, y):
+def addText(sfont, text, color, x, y): #Вспомогательная функция рендера любого текста
     rend = sfont.render(text, True, color)
     root.blit(rend, (x-(sfont.size(text)[0]/2), y-(sfont.size(text)[1]/2)))
 
 
-def openCam():
+def openCam(): #Функция открытия камеры
     pg.cam = cv.VideoCapture(1)
 
-def loadModel():
-    pg.model = load_model("Neural/v0.1/keras_Model.h5", compile=False)
-    pg.class_names = open("Neural/v0.1/labels.txt", "r").readlines()
+def loadModel(): #Функция загрузки модели нейросети из файла
+    pg.model = load_model("Neural/v0.2/model.h5", compile=False)
+    #pg.class_names = open("Neural/v0.1/labels.txt", "r").readlines()
 
 
-def doBank():
+def doBank(): #Функция которая срабатывает при нажатии на Enter. Клавишу Enter нажимает сканер штрих кодов
     try:
         pg.bank = pg.Banks[pg.qr2]
-        SETaddpoint()
+        SETaddpoint() #Когда нашел банку установить экран добавления очка
     except KeyError:
         pg.bank = {'name': 'Not Found', 'cost': '0'}
-        SETbankerror()
+        SETbankerror() #Когда не нашел банку установить экран не найденой банки
     pg.qr2 = ''
 
 
 
-def welcomeScr():
+def welcomeScr(): #Функция начального экрана
     wlInfo.show()
     wlCardCheck.show()
     wlShop.show()
@@ -188,7 +188,7 @@ def welcomeScr():
     #addText(pg.font.SysFont('Arial', 40), "Вставьте банку в ячейку...", (0, 0, 0), pg.ws/2, (pg.hs-100)/2)
     #addText(pg.font.SysFont('Arial', 18), "Для получения дополнительных инструкций нажмите кнопку ниже", (0, 0, 0), pg.ws/2, (pg.hs)/2)
 
-def infoScr():
+def infoScr(): #Функция экрана с инструкциями
     infBack.show()
     addText(pg.font.SysFont('Arial', 30), "Фандомат: сдавайте банки - получайте балллы.", (0, 0, 0), pg.ws/2, 100)
     addText(pg.font.SysFont('Arial', 30), "Инструкции:", (0, 0, 0), pg.ws/2, 150)
@@ -204,67 +204,67 @@ def infoScr():
     addText(pg.font.SysFont('Arial', 30), "9. Для того чтобы посмотреть баланс: нажмите Enter и выберете выриант информация о карте", (0, 0, 0), pg.ws/2, 650)
     addText(pg.font.SysFont('Arial', 30), "10. Вашу карту могут заблокировать: для разблокировки обратитесь в тех поддержку", (0, 0, 0), pg.ws/2, 700)
 
-def cardcheckScr():
+def cardcheckScr(): #Функция экрана для призыва приложить карту
     crdchBack.show()
     addText(pg.font.SysFont('Arial', 40), "Приложите карту к считывателю", (0, 0, 0), pg.ws/2, pg.hs/2)
     if pg.cardCode == 0: SETcardinfoerror()
     elif pg.cardCode == 1: SETcardinfo()
 
-def cardinfoerrorScr():
+def cardinfoerrorScr(): #Функция экрана с ошибкой не найденного пользователя
     crdinferrBack.show()
     addText(pg.font.SysFont('Arial', 40), "Пользователь не найден", (0, 0, 0), pg.ws/2, pg.hs/2)
 
-def cardinfoScr():
+def cardinfoScr(): #Функция экрана с информацией по карте
     crdinfBack.show()
     addText(pg.font.SysFont('Arial', 40), f"Имя: {pg.usInfo['name']}", (0, 0, 0), pg.ws/2, pg.hs/3)
     addText(pg.font.SysFont('Arial', 40), f"Баланс: {pg.usInfo['bal']}", (0, 0, 0), pg.ws/2, pg.hs/2)
     if pg.usInfo['isMod'] == '1': crdinfMod.show()
 
-def addpointScr():
+def addpointScr(): #Функция экрана для призыва приложить карту, но при отсканированой банкой, а не по кнопке "Информация по карте", как в функции выше
     addText(pg.font.SysFont('Arial', 40), "Приложите карту к считывателю", (0, 0, 0), pg.ws/2, pg.hs/2)
     if pg.cardCode == 0: SETregisterStep1()
     elif pg.cardCode==1: SETcardinfoadd()
 
-def cardinfoaddScr():
+def cardinfoaddScr(): #Функция экрана с информацией по карту, но после внесенной банки
     crdinfBack.show()
     addText(pg.font.SysFont('Arial', 40), f"Имя: {pg.usInfo['name']}", (0, 0, 0), pg.ws/2, pg.hs/3)
     addText(pg.font.SysFont('Arial', 40), f"Баланс: {int(pg.usInfo['bal'])+int(1)}", (0, 0, 0), pg.ws/2, pg.hs/2)
     addText(pg.font.SysFont('Arial', 30), f"1 балл добавлен!", (0, 0, 0), pg.ws/2, pg.hs/3-100)
 
-def bankerrorScr():
+def bankerrorScr(): #функция экрана с не найденной банкой
     bnkerrBack.show()
     addText(pg.font.SysFont('Arial', 40), "Банка не найдена!", (0, 0, 0), pg.ws/2, pg.hs/2)
 
-def bankerrorneuralScr():
+def bankerrorneuralScr(): #Функция экрана с не найденной нейросетью банкой
     bnkerrBack.show()
     addText(pg.font.SysFont('Arial', 40), "Нейросеть не обнаружила банку. Пожалуйста извлеките ее из аппрата", (0, 0, 0), pg.ws/2, pg.hs/2)
 
-def regStep1Scr():
+def regStep1Scr(): #Функция экрана с первым этапом регистрации пользователя
     kb.showText()
 
-def regStep2Scr():
+def regStep2Scr(): #Функция экрана со вторым этапом регистрации (и информации о карте)
     addText(pg.font.SysFont('Arial', 40), "Пользователь зарегистрирован!", (0, 0, 0), pg.ws/2, pg.hs/2-200)
     addText(pg.font.SysFont('Arial', 40), f"Теперь твой баланс 1 балл!", (0, 0, 0), pg.ws/2, pg.hs/2)
 
-def shopScr():
+def shopScr(): #Функция экрана магазина, не готово
     crdchBack.show()
 
-def bankScr():
+def bankScr(): #Функция экрана "Банка"
     bnkNeural.show()
     addText(pg.font.SysFont('Arial', 40), "Приложите банку к штрих коду", (0, 0, 0), pg.ws/2, pg.hs/2)
-    addText(pg.font.SysFont('Arial', 23), "Моя банка или штрих код", (0, 0, 0), pg.ws/2, pg.hs/2+250)
+    addText(pg.font.SysFont('Arial', 23), "Моя банка или штрих код", (0, 0, 0), pg.ws/2, pg.hs/2+250) #Сооздание надписи для кнопки
     addText(pg.font.SysFont('Arial', 23), "повреждены.", (0, 0, 0), pg.ws/2, pg.hs/2+280)
     addText(pg.font.SysFont('Arial', 23), "Использовать нейросеть", (0, 0, 0), pg.ws/2, pg.hs/2+310)
 
-def neuralScr():
+def neuralScr(): #Функция экрана с распознованией при помощи нейросети
     addText(pg.font.SysFont('Arial', 40), "Использую нейросеть для распознования банки...", (0, 0, 0), pg.ws/2, pg.hs/2)
     pg.sin1 += 0.05
-    pg.sin2 += 0.05
+    pg.sin2 += 0.05 #Косметические линии, рисуются функцией синуса
     pg.draw.line(root, (0, 0, 0), (pg.ws/2-100, 700), (pg.ws/2-100, 700-abs(math.sin(pg.sin1)*100)), width=5)
     pg.draw.line(root, (0, 0, 0), (pg.ws/2, 700), (pg.ws/2, 700-abs(math.sin(pg.sin2)*100)), width=5)
     pg.draw.line(root, (0, 0, 0), (pg.ws/2+100, 700), (pg.ws/2+100, 700-abs(math.sin(pg.sin1)*100)), width=5)
 
-def customerrorScr():
+def customerrorScr(): #Функция экрана для универсального вывода ошибок
     bnkerrBack.show()
     addText(pg.font.SysFont('Arial', 40), "Произошла непридвиденная ошибка. Обратитесь в тех поддержку", (0, 0, 0), pg.ws/2, pg.hs/2)
     addText(pg.font.SysFont('Arial', 15), f"Код ошибки: {pg.code}",  (0, 0, 0), pg.ws/2, pg.hs/2+200)
@@ -272,7 +272,8 @@ def customerrorScr():
 
 
 
-def cardRead():
+def cardRead(): #Функция в отдельном потоке для считывания uuid номера с монитора порта
+    ser.readall()
     while True:
         r = str(ser.readall())
         #r = "b'AAAAAA11\\r\\n'" #####
@@ -297,20 +298,33 @@ def cardRead():
                 except KeyError: pg.cardCode = 0
                 return
 
-def neuralRead():
-    _, frame = pg.cam.read()
+def neuralRead(): #Сканирование при помощи нейросети, тоже в отдельном потоке
+    _, image = pg.cam.read() #Снятие снимка с камеры
     if _:
-        img_orig = frame 
-        frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-        image = cv.resize(img_orig, (224, 224), interpolation=cv.INTER_AREA) 
-        image = np.asarray(image, dtype=np.float32).reshape(1, 224, 224, 3) 
-        image = (image / 127.5) - 1
-        prediction = pg.model.predict(image) 
-        index = np.argmax(prediction) 
-        class_name = pg.class_names[index] 
-        confidence_score = prediction[0][index]
-        if index == 0: SETaddpoint()
-        if index == 1: SETbankerrorneural()
+        #frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        #image = cv.cvtColor(cv.resize(img_orig, (224, 224), interpolation=cv.INTER_AREA) , cv.COLOR_BGR2GRAY)
+        #image = np.asarray(frame, dtype=np.float32).reshape(1, 224, 224)
+        print(image.shape)
+        #image = cv.resize(image, (224, 224)) #Изменение размера картинки на нужные
+        image = cv.imread("Neural/datasets/not bank/not_bank46.png")
+        print(image.shape)
+        image = cv.cvtColor(image, cv.COLOR_BGR2GRAY) #Преобразование в черно-белую картинку
+        print(image.shape)
+        cv.imwrite("Neural/frame.png", image) 
+        image = image.astype("float32")/255.0 #Преобразование для нейросети: значение цвета будет от 0 до 1
+        print(image.shape)
+        image = np.expand_dims(image, -1) #Еще одно преобразование для нейросети
+        print(image.shape)
+        image = np.asarray([image.tolist()])
+        print(image.shape)
+        #image = (image / 127.5) - 1
+        prediction = pg.model.predict(image)  #Предсказание
+        index = np.argmax(prediction)
+        print(f"conf: {prediction[0][index]}")
+        #class_name = pg.class_names[index] 
+        #confidence_score = prediction[0][index]
+        if index == 1: SETaddpoint()
+        if index == 0: SETbankerrorneural()
         return
     else:
         SETcustomerror("CAM_RETURNED_NOT_SUCCESS_CODE")
@@ -318,59 +332,59 @@ def neuralRead():
 
 
 
-def SETwelcome():
+def SETwelcome(): #Функция включения начального экрана
     hideAll()
     pg.state = 'welcome'
 
-def SETinfo():
+def SETinfo():  #Функция включения экрана с информацией
     hideAll()
     pg.state = 'info'
 
-def SETcardcheck():
+def SETcardcheck(): #Функция включения экрана с призывом приложить карту
     hideAll()
     pg.state = 'cardcheck'
     pg.cardCode = -1
-    pg.th = th.Thread(target = cardRead)
+    pg.th = th.Thread(target = cardRead) #Запуск потока
     pg.th.start()
 
-def SETshop():
+def SETshop(): #Функция включения экрана с магазином
     hideAll()
     pg.state = 'shop'
 
-def SETcardinfoerror():
+def SETcardinfoerror(): #Функция включения экрана с ошибкой не найденного пользователя
     hideAll()
     pg.state = 'cardinfoerror'
 
-def SETcardinfo():
+def SETcardinfo(): #Функция включения экрана с информацией по карте
     hideAll()
     pg.state = 'cardinfo'
 
-def SETmod():
+def SETmod(): #Функция включения экрана модерации, пока что не используется
     hideAll()
     pg.state = 'mod'
 
-def SETaddpoint():
+def SETaddpoint(): #Функция включения экрана с призывом приложить карту, с найденной банкой
     hideAll()
     pg.state = 'addpoint'
     pg.cardCode = -1
-    pg.th = th.Thread(target = cardRead)
+    pg.th = th.Thread(target = cardRead) #Запуск потока
     pg.th.start()
 
-def SETbankerror():
+def SETbankerror(): #Функция включения экрана с не найденной банкой
     hideAll()
-    pg.state = 'bankerror'
+    pg.state = 'bankerror' 
 
-def SETcardinfoadd():
+def SETcardinfoadd(): #Функция включения экрана с информацией по карте + добавление балла
     hideAll()
     bal = int(pg.Users[pg.usInfo['uuid']]['bal'])
-    bal += int(1)
-    pg.Users[pg.usInfo['uuid']]['bal'] = str(bal)
-    writeTHIS()
+    bal += int(1) #Добавление очка к балансу
+    pg.Users[pg.usInfo['uuid']]['bal'] = str(bal) #Обновление баланса
+    writeTHIS() #Сохранение в файл
     pg.state = 'cardinfoadd'
 
-def SETregisterStep1():
+def SETregisterStep1(): #Функция включения экрана с первым этапом регистрации
     hideAll()
-    pg.regUsInfo = {}
+    pg.regUsInfo = {} #Создание начальных данных нового пользователя
     pg.regUsInfo['uuid'] = pg.uuid
     pg.regUsInfo['bal'] = '1'
     pg.regUsInfo['isBaned'] = '0'
@@ -379,7 +393,7 @@ def SETregisterStep1():
     regEnter.show()
     pg.state = 'regStep1'
 
-def SETregisterStep2():
+def SETregisterStep2(): #Функция включения экрана с информацией по карте нового пользователя
     hideAll()
     pg.regUsInfo['name'] = kb.text
     kb.text = ''
@@ -393,22 +407,22 @@ def SETregisterStep2():
     crdinfBack.show()
     pg.state = 'regStep2'
 
-def SETbank():
+def SETbank(): #Функция включения экрана "Банка"
     hideAll()
     pg.state = 'bank'
 
-def SETneural():
+def SETneural(): #Функция включения экрана распознования с нейросети
     hideAll()
-    pg.sin1 = 0
+    pg.sin1 = 0 #Начальные параметры синусоидных линий
     pg.sin2 = 30
     pg.state = 'neural'
-    th.Thread(target=neuralRead).start()
+    th.Thread(target=neuralRead).start() #Начало потока
 
-def SETbankerrorneural():
+def SETbankerrorneural(): #Функция включения экрана не найденной с помощью нейросети банки
     hideAll()
     pg.state = 'bankerrorneural'
 
-def SETcustomerror(code): 
+def SETcustomerror(code): #Функция включения экрана для универсального вывода ошибки
     pg.code = code
     hideAll()
     pg.state = 'customerror'
@@ -416,11 +430,11 @@ def SETcustomerror(code):
 
 
 
-def readTHIS():
+def readTHIS(): #Функция для чтения данных из json файлов
     pg.Users = ast.literal_eval(usf.read())
     pg.Banks = ast.literal_eval(bnkf.read())
 
-def writeTHIS():
+def writeTHIS(): #Функция для записи данных в json файлы
     wrus = cdcs.open("Base2/Users.txt", 'w', 'utf-8')
     wrbnk=cdcs.open("Base2/Banks.txt", 'w', 'utf-8')
     wrus.write(str(pg.Users))
@@ -432,90 +446,96 @@ def writeTHIS():
 
 pg.processing = True
 
-#ser = serial.Serial("COM5", 9600, timeout = 0)
+#ser = serial.Serial("COM5", 9600, timeout = 0) #Привязка к последовательному порту
 
-MYVERSION    = "v.0.2.0"
-MYVERSIONGR="v.0.1-b"
-BASEMODELVERSION = "v.0.1"
+MYVERSION    = "v.0.2.2" #Константы версий
+MYVERSIONGR="v.0.2-a"
+BASEMODELVERSION = "v.0.2"
 
 pg.usInfo = {'uuid': "Err", 'name': "Err, not found", 'bal': "Err, not found", 'isMod': '0', 'isBaned': '0'}
 
 usf = cdcs.open("Base2/Users.txt", 'r', 'utf-8')
 bnkf = cdcs.open("Base2/Banks.txt", 'r', 'utf-8')
-readTHIS()
-
+readTHIS() #Чтение данных
+ 
 print('\n\n')
 print(f"Version: {MYVERSION}\n")
 print(f"Version of GR: {MYVERSIONGR}\n")
 print(f"Users Base Version: {pg.Users['Version']}\n")
 print(f"Banks Base Version: {pg.Banks['Version']}\n")
-print(f"Model Version: {BASEMODELVERSION}\n")
+print(f"Model Version: {BASEMODELVERSION}\n") #Удобный вывод всех версий
 
 print(f"Opening the camera...")
 openCam()
-print(f"Camera opened\n")
+print(f"Camera opened\n") #Открытие камеры
 
 print(f"Load model...")
 loadModel()
-print(f"Model loaded\n")
+print(f"Model loaded\n") #Загрузка модели
 
 print("Sleepin...", end=' ')
-sleep(0.5)
+sleep(0.5) #Время для того чтобы успеть взглянуть на все версии
 print("Run GR\n")
 
 pg.init()
 
-root = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+root = pg.display.set_mode((0, 0), pg.FULLSCREEN) #Создание окна. Параметр pg.FULLSCREEN пользволяет вывести окно ровно на весь экран, и без рамки
 
 pg.display.update()
 
 font = pg.font.SysFont('Arial', 25)
 
 fps = 60
-fpsClock = pg.time.Clock()
+fpsClock = pg.time.Clock() #Пайгеймовские часы
 
 pg.ws = pg.display.get_surface().get_size()[0]
-pg.hs = pg.display.get_surface().get_size()[1]
+pg.hs = pg.display.get_surface().get_size()[1] #Переменные размера окна, позволяют удобно привязывать текст и кнопки
 
 obj = []
 
 kb = Keyboard123()
 
 wlInfo = Button(250, 630, 300, 200, 'Инструкции', SETinfo)
-wlCardCheck = Button(600, 630, 300, 200, 'Информация по карте', SETcardcheck)
+wlCardCheck = Button(600, 630, 300, 200, 'Информация по карте', SETcardcheck, textSize=27)
 wlShop = Button(950, 630, 300, 200, 'Магазин', SETshop)
-wlBank = Button(450, 300, 600, 250, "Банка", SETbank, textSize = 80)
+wlBank = Button(450, 300, 600, 250, "Банка", SETbank, textSize = 100) #Кнопки начального экрана
 
-infBack = Button(50, 630, 300, 200, 'Назад', SETwelcome)
+infBack = Button(50, 630, 300, 200, 'Назад', SETwelcome) #Кнопка "Назад" экрана с инструкцией
 
-crdchBack = Button(50, 630, 300, 200, 'Назад', SETwelcome)
+crdchBack = Button(50, 630, 300, 200, 'Назад', SETwelcome) #Кнопка "Назад" экрана с призывом приложить карту, но без сканированной до этого банки
 
-crdinferrBack = Button(50, 630, 300, 200, 'Назад', SETwelcome)
+crdinferrBack = Button(50, 630, 300, 200, 'Назад', SETwelcome) #Кнопка "Назад" экрана с не найденным пользователем
 
-crdinfBack = Button(50, 630, 300, 200, 'Далее', SETwelcome)
-crdinfMod = Button(1000, 630, 300, 200, 'Мод Чек', SETmod)
+crdinfBack = Button(50, 630, 300, 200, 'Далее', SETwelcome) #Кнопка "Назад" экрана с информацией по карте
+crdinfMod = Button(1000, 630, 300, 200, 'Мод Чек', SETmod) #Кнопка входа в режим модератора, на том же экране
 
-bnkerrBack = Button(50, 630, 300, 200, 'Назад', SETwelcome)
+bnkerrBack = Button(50, 630, 300, 200, 'Назад', SETwelcome) #Кнопка "Назад" для экрана с не найденной банкой
+#Кнопки "Назад" могут быть и не на своих экранах, так как создавать кнопку "Назад" каждый раз заново оказалось не практично
 
-regEnter = Button(1260, pg.hs/2+320-150, 190, 190, 'Ввод', SETregisterStep2, hWWW=2)
+regEnter = Button(1260, pg.hs/2+320-150, 190, 190, 'Ввод', SETregisterStep2, hWWW=2) #Кнопка "Ввод" для экрана с регистрацией
 
-bnkNeural = Button(pg.ws/2-150, pg.hs/2+150, 300, 200, '', SETneural)
+bnkNeural = Button(pg.ws/2-150, pg.hs/2+150, 300, 200, '', SETneural) #Кнопка экрана "Банка" для начала сканирования при помощи нейросети, текст на кнопку при создании не передаётся, создается в функции экрана, так как нужен был многострочный текст
 
-hideAll()
+hideAll() #Сразу прячем кнопки
 
-pg.state = "welcome"
+pg.state = "welcome" #Устанавливаем экран привествия
 
-pg.qr2 = ''
+pg.qr2 = '' #Переменная в которой хранится введенная сканером штрих кодов информация
 
 pg.cardData = ''
 
-pg.ent = False
+#pg.ent = False
 
 while pg.processing:
-    pg.ent = False
+    #pg.ent = False
     for event in pg.event.get():
-        if event.type == pg.QUIT: pass
+        if event.type == pg.QUIT: pass #Окно не закроется при Alt+F4 и других попытках закрыть окно не через IDLE и диспетчер задач
         if event.type == pg.KEYDOWN:
+            """Сканер штрихкода работает по принципу:
+                Отсканировал штрих код/qr код
+                Ввел информацию с штрих/qr кода, как как-будто информацию ввели с клавиатуры
+                В конце нажимает Enter как как-будто с клавиатуры
+                Ниже мы отслеживаем нажатия клавиатуры"""
             if event.key == pg.K_1:
                 pg.qr2 += '1'
             if event.key == pg.K_2:
@@ -538,13 +558,13 @@ while pg.processing:
                 pg.qr2 += '0'
             if event.key == pg.K_RETURN:
                 doBank()
-            if event.key == pg.K_p:
-                pg.ent = True
+            #if event.key == pg.K_p:
+                #pg.ent = True
 
     root.fill((255, 255, 255))
         
     for i in obj:
-        i.process()
+        i.process() #Рендер каждой кнопки, проверка на включение внутри функции process()
 
     if pg.state == "welcome": welcomeScr()
     if pg.state == "info": infoScr()
@@ -560,13 +580,14 @@ while pg.processing:
     if pg.state == "bank": bankScr()
     if pg.state == "neural": neuralScr()
     if pg.state == "bankerrorneural": bankerrorneuralScr()
-    if pg.state == "customerror": customerrorScr()
+    if pg.state == "customerror": customerrorScr() #Включение функций экранов
 
     pg.display.flip()
-    fpsClock.tick(fps)
+    fpsClock.tick(fps) #Обновление экрана и тик часов
 
 
 pg.quit()
 quit()
+
 
 
